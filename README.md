@@ -1,7 +1,9 @@
 # SS_Aster_repo 
+https://salvarys.github.io/SS_Aster_repo/
 
+Added (WASD) movement for the player 
+Added camera behavior. where you can use the mouse to look around 
+Updating player behavior to handle gameloops 
 
-I want to start setting up the terriain players will play on 
-Start adding scipts for charcter, game manager, etc. 
 
  
