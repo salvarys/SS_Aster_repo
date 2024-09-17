@@ -1,24 +1,38 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class CameraBehavior : MonoBehaviour
+public class CameraBehavior: MonoBehaviour
 {
-    public Vector3 camOffset = new Vector3(0f, 1.2f, -2.6f);
+    public Transform player; 
+    public Vector3 offset;   
+    public float mouseSensitivity = 100.0f;  
+    public float distanceFromPlayer = 5f;   
 
-    private Transform target;
+    float xRotation = 0f;
+    float yRotation = 0f;
 
     void Start()
     {
-        target = GameObject.Find("Player").transform;
+        Cursor.lockState = CursorLockMode.Locked;
+
+        if (offset == Vector3.zero)
+        {
+            offset = new Vector3(0, 2, -distanceFromPlayer);  
+        }
     }
 
-    void LateUpdate()
+    void Update()
     {
-        this.transform.position = target.TransformPoint(camOffset);
+        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
+        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
 
-        this.transform.LookAt(target);
+        yRotation += mouseX; 
+        xRotation -= mouseY; 
+        xRotation = Mathf.Clamp(xRotation, -30f, 60f); 
 
+        Quaternion rotation = Quaternion.Euler(xRotation, yRotation, 0f);
 
+        transform.position = player.position + rotation * offset;
+
+        transform.LookAt(player);
     }
 }
