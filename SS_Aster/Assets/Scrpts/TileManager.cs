@@ -2,7 +2,8 @@ using UnityEngine;
 
 public class TileManager : MonoBehaviour
 {
-    public Renderer tileRenderer;  
+    public Renderer tileRenderer;   
+
     private Color originalColor;   
     private Color currentColor;  
 
