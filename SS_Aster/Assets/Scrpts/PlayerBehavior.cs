@@ -38,9 +38,8 @@ public class PlayerBehavior : MonoBehaviour
         {
             bo = true;
         }
-
-
     }
+
 
     //Player Phyisics 
     void FixedUpdate()
