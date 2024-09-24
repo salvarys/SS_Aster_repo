@@ -4,14 +4,12 @@ using UnityEngine;
 
 public class PlayerBehavior : MonoBehaviour
 {
-    // Players limits
     public float moveSpeed = 10f;
     public float rotateSpeed = 75f;
     public float jumpVelocity = 5f;
     public float distanceToGround = 0.1f;
     public LayerMask groundLayer;
 
-    //PLayer's Components
     private bool bo;
     private float vInput;
     private float hInput;
@@ -27,8 +25,6 @@ public class PlayerBehavior : MonoBehaviour
 
     void Update()
     {
-
-        // Player's Movement
         vInput = Input.GetAxis("Vertical") * moveSpeed;
 
 
@@ -40,8 +36,6 @@ public class PlayerBehavior : MonoBehaviour
         }
     }
 
-
-    //Player Phyisics 
     void FixedUpdate()
     {
         if (bo)
