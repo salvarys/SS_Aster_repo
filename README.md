@@ -2,14 +2,12 @@
 https://salvarys.github.io/SS_Aster_repo/
 
 # New
-Added a health display (use the spacebar to take damage) 
-
-# Updated 
-Updated where if you collect a certain amount of tiles you win ( it is set to 5 tiles need to win) 
-Update where player does not fall when moving around 
-Updated where the tiles now change to the player color 
+Fixing photon 
+Added Menu scene and End scene 
+Added a timer for how long a tile last when player dies
 
 # Testing 
-Testing if another player get on a tile that you have collected, it changes to the other player color 
+Testing lobby screen 
+Testing different camera angles (also seeing how the game feels in first person)
 
  
