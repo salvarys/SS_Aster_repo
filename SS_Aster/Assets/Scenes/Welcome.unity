@@ -471,7 +471,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 2078581552}
-        m_TargetAssemblyTypeName: Menu, Assembly-CSharp
+        m_TargetAssemblyTypeName: WelcomeScene, Assembly-CSharp
         m_MethodName: PlayGame
         m_Mode: 1
         m_Arguments:
