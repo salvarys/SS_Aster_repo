@@ -4,64 +4,66 @@ using UnityEngine;
 using Photon.Pun;
 using Photon.Realtime;
 
-
-
 public class PlayerController : MonoBehaviourPun
 {
     [Header("Stats")]
     public float moveSpeed;
     public float jumpForce;
+    public int maxHp = 100;
+    public int respawnTime = 5;  // Time to respawn after death
 
     [Header("Components")]
     public Rigidbody rig;
+    public MeshRenderer mr;
 
     public int id;
     public Player photonPlayer;
     private int curAttackerId;
 
     public int curHp;
-    public int maxHp;
     public int kills;
     public bool dead;
     private bool flashingDamage;
-    public MeshRenderer mr;
 
-    //public PlayerWeapon weapon;
+    void Start()
+    {
+        curHp = maxHp;
+    }
 
     // Update is called once per frame
     void Update()
     {
+        if (!photonView.IsMine || dead)
+            return;
+
         Move();
 
         if (Input.GetKeyDown(KeyCode.Space))
             TryJump();
-        if (!photonView.IsMine || dead)
-            return;
 
-       // if (Input.GetMouseButtonDown(0))
-        //    weapon.fist();
+        // Other input handling (e.g., capturing tiles) can go here
     }
 
     void Move()
     {
-        // get the input axis
+        // Get the input axis
         float x = Input.GetAxis("Horizontal");
         float z = Input.GetAxis("Vertical");
 
-        // calculate a direction relative to where we're facing
+        // Calculate a direction relative to where we're facing
         Vector3 dir = (transform.forward * z + transform.right * x) * moveSpeed;
         dir.y = rig.velocity.y;
 
-        // set that as our velocity
+        // Set that as our velocity
         rig.velocity = dir;
     }
 
     void TryJump()
     {
-        // create a ray facing down
+        // Create a ray facing down
         Ray ray = new Ray(transform.position, Vector3.down);
 
-        // shoot the raycast
+        // Shoot the raycast
         if (Physics.Raycast(ray, 1.5f))
             rig.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
     }
@@ -74,7 +76,7 @@ public class PlayerController : MonoBehaviourPun
 
         GameManager.instance.players[id - 1] = this;
 
-        // is thos not our local player?
+        // Is this not our local player?
         if (!photonView.IsMine)
         {
             GetComponentInChildren<Camera>().gameObject.SetActive(false);
@@ -82,8 +84,7 @@ public class PlayerController : MonoBehaviourPun
         }
         else
         {
-           // GameUI.instance.Initialize(this);
-
+            // GameUI.instance.Initialize(this);
         }
     }
 
@@ -92,13 +93,17 @@ public class PlayerController : MonoBehaviourPun
     {
         if (dead)
             return;
+
         curHp -= damage;
         curAttackerId = attackerId;
-        // flash the player red
+
+        // Flash the player red
         photonView.RPC("DamageFlash", RpcTarget.Others);
-        // update the health bar UI
-        //GameUI.instance.UpdateHealthBar();
-        // die if no health left
+
+        // Update the health bar UI
+        // GameUI.instance.UpdateHealthBar();
+
+        // Die if no health left
         if (curHp <= 0)
             photonView.RPC("Die", RpcTarget.All);
     }
@@ -108,8 +113,10 @@ public class PlayerController : MonoBehaviourPun
     {
         if (flashingDamage)
             return;
-        StartCoroutine(DamageFlashCoRoutine());
-        IEnumerator DamageFlashCoRoutine()
+
+        StartCoroutine(DamageFlashCoroutine());
+
+        IEnumerator DamageFlashCoroutine()
         {
             flashingDamage = true;
             Color defaultColor = mr.material.color;
@@ -128,20 +135,45 @@ public class PlayerController : MonoBehaviourPun
 
         GameManager.instance.alivePlayers--;
 
-        // host will check win condition
-        if (PhotonNetwork.IsMasterClient)
-            GameManager.instance.CheckWinCondition();
-        // is this our local player?
+        // Host will check win condition
+       // if (PhotonNetwork.IsMasterClient)
+          //  GameManager.instance.CaptureTile(int playerId);
+
+        // Is this our local player?
         if (photonView.IsMine)
         {
             if (curAttackerId != 0)
                 GameManager.instance.GetPlayer(curAttackerId).photonView.RPC("AddKill", RpcTarget.All);
-            // set the cam to spectator
-           // GetComponentInChildren<CameraController>().SetAsSpectator();
-            // disable the physics and hide the player
+
+            // Disable the physics and hide the player
             rig.isKinematic = true;
             transform.position = new Vector3(0, -50, 0);
+
+            // Respawn after a delay
+            StartCoroutine(RespawnCoroutine());
         }
+    }
+
+    IEnumerator RespawnCoroutine()
+    {
+        yield return new WaitForSeconds(respawnTime);
+
+        photonView.RPC("Respawn", RpcTarget.All);
+    }
+
+    [PunRPC]
+    void Respawn()
+    {
+        dead = false;
+        curHp = maxHp;
+
+        // Reset player position to a random spawn point
+        Transform spawnPoint = GameManager.instance.spawnPoints[Random.Range(0, GameManager.instance.spawnPoints.Length)];
+        transform.position = spawnPoint.position;
+        rig.isKinematic = false;
+
+        // Reset the player in the game
+        GameManager.instance.alivePlayers++;
     }
 
     [PunRPC]
@@ -149,6 +181,6 @@ public class PlayerController : MonoBehaviourPun
     {
         kills++;
 
-        //GameUI.instance.UpdatePlayerInfoText();
+        // GameUI.instance.UpdatePlayerInfoText();
     }
 }
