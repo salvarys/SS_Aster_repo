@@ -1717,7 +1717,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 836b5d6ed4776fd4aa043a78019882e2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerPrefabLocation: Player_Body
+  playerPrefabLocation: Resource
   players: []
   spawnPoints:
   - {fileID: 720388507}
