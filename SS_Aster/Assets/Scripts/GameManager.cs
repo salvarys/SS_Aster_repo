@@ -22,10 +22,8 @@ public class GameManager : MonoBehaviourPun
     // Win condition: number of tiles required to win
     private const int tilesToWin = 7;
 
-    // Instance for singleton pattern
     public static GameManager instance;
 
-    // Tiles owned by each player
     private Dictionary<int, int> playerTileCounts = new Dictionary<int, int>();  // Tracks player ID -> owned tiles count
 
     void Awake()

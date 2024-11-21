@@ -4,15 +4,14 @@ using UnityEngine;
 
 public class EnemyBehavior : MonoBehaviour
 {
-    public float moveSpeed = 3f;  // Speed of the enemy
-    private Vector3 moveDirection;  // Direction of movement
-    public float directionChangeInterval = 2f; // How often the enemy changes direction
+    public float moveSpeed = 3f;  
+    private Vector3 moveDirection;  
+    public float directionChangeInterval = 2f; 
 
     private float timeSinceDirectionChange = 0f;
 
     void Start()
     {
-        // Initialize a random direction
         ChangeDirection();
     }
 
@@ -48,7 +47,6 @@ public class EnemyBehavior : MonoBehaviour
 
     private void ChangeDirection()
     {
-        // Pick a random direction for movement
         float randomX = Random.Range(-1f, 1f);
         float randomZ = Random.Range(-1f, 1f);
         moveDirection = new Vector3(randomX, 0f, randomZ).normalized;
