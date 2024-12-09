@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class EnemyBehavior : MonoBehaviour
 {
+<<<<<<< HEAD
     [Header("Stats")]
     public float moveSpeed = 3f;
     public float detectionRange = 5f;
@@ -11,6 +12,11 @@ public class EnemyBehavior : MonoBehaviour
     public int maxHp = 50;
     public int damage = 10;
     public float respawnTime = 3f;
+=======
+    public float moveSpeed = 3f;  
+    private Vector3 moveDirection;  
+    public float directionChangeInterval = 2f; 
+>>>>>>> 9160cec0c70cb57cf38c7afdd9064e2b553b2c1b
 
     [Header("Movement")]
     public Transform[] patrolPoints; // Points for patrolling
@@ -27,8 +33,12 @@ public class EnemyBehavior : MonoBehaviour
 
     void Start()
     {
+<<<<<<< HEAD
         currentHp = maxHp;
         player = FindObjectOfType<PlayerController>();
+=======
+        ChangeDirection();
+>>>>>>> 9160cec0c70cb57cf38c7afdd9064e2b553b2c1b
     }
 
     void Update()
@@ -97,6 +107,7 @@ public class EnemyBehavior : MonoBehaviour
 
     IEnumerator CaptureTile(GameObject tile)
     {
+<<<<<<< HEAD
         isCapturing = true;
 
         // Simulate capturing time
@@ -143,5 +154,10 @@ public class EnemyBehavior : MonoBehaviour
         meshRenderer.enabled = true;
 
         Debug.Log("Enemy respawned!");
+=======
+        float randomX = Random.Range(-1f, 1f);
+        float randomZ = Random.Range(-1f, 1f);
+        moveDirection = new Vector3(randomX, 0f, randomZ).normalized;
+>>>>>>> 9160cec0c70cb57cf38c7afdd9064e2b553b2c1b
     }
 }

@@ -12,6 +12,22 @@ public class GameManager : MonoBehaviour
     private PlayerController player;
     private List<EnemyBehavior> enemies = new List<EnemyBehavior>();
 
+<<<<<<< HEAD
+=======
+    // Win condition: number of tiles required to win
+    private const int tilesToWin = 7;
+
+    public static GameManager instance;
+
+    private Dictionary<int, int> playerTileCounts = new Dictionary<int, int>();  // Tracks player ID -> owned tiles count
+
+    void Awake()
+    {
+        instance = this;
+    }
+
+    // Start is called before the first frame update
+>>>>>>> 9160cec0c70cb57cf38c7afdd9064e2b553b2c1b
     void Start()
     {
         // Spawn the player at a random spawn point
