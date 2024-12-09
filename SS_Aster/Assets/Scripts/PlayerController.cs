@@ -1,186 +1,61 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Photon.Pun;
-using Photon.Realtime;
 
-public class PlayerController : MonoBehaviourPun
+public class PlayerController : MonoBehaviour
 {
     [Header("Stats")]
-    public float moveSpeed;
-    public float jumpForce;
+    public float moveSpeed = 5f;
+    public float jumpForce = 10f;
     public int maxHp = 100;
-    public int respawnTime = 5;  // Time to respawn after death
+    public int kills = 0;
 
-    [Header("Components")]
-    public Rigidbody rig;
-    public MeshRenderer mr;
-
-    public int id;
-    public Player photonPlayer;
-    private int curAttackerId;
-
-    public int curHp;
-    public int kills;
-    public bool dead;
-    private bool flashingDamage;
+    public int currentHp { get; private set; }
 
     void Start()
     {
-        curHp = maxHp;
+        // Initialize health
+        currentHp = maxHp;
     }
 
-    // Update is called once per frame
     void Update()
     {
-        if (!photonView.IsMine || dead)
-            return;
-
         Move();
 
         if (Input.GetKeyDown(KeyCode.Space))
-            TryJump();
-
-        // Other input handling (e.g., capturing tiles) can go here
+            Jump();
     }
 
     void Move()
     {
-        // Get the input axis
         float x = Input.GetAxis("Horizontal");
         float z = Input.GetAxis("Vertical");
 
-        // Calculate a direction relative to where we're facing
-        Vector3 dir = (transform.forward * z + transform.right * x) * moveSpeed;
-        dir.y = rig.velocity.y;
-
-        // Set that as our velocity
-        rig.velocity = dir;
+        Vector3 moveDir = new Vector3(x, 0, z) * moveSpeed * Time.deltaTime;
+        transform.Translate(moveDir, Space.World);
     }
 
-    void TryJump()
+    void Jump()
     {
-        // Create a ray facing down
-        Ray ray = new Ray(transform.position, Vector3.down);
-
-        // Shoot the raycast
-        if (Physics.Raycast(ray, 1.5f))
-            rig.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
-    }
-
-    [PunRPC]
-    public void Initialize(Player player)
-    {
-        id = player.ActorNumber;
-        photonPlayer = player;
-
-        GameManager.instance.players[id - 1] = this;
-
-        // Is this not our local player?
-        if (!photonView.IsMine)
+        if (Physics.Raycast(transform.position, Vector3.down, 1.1f))
         {
-            GetComponentInChildren<Camera>().gameObject.SetActive(false);
-            rig.isKinematic = true;
-        }
-        else
-        {
-            // GameUI.instance.Initialize(this);
+            GetComponent<Rigidbody>().AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
         }
     }
 
-    [PunRPC]
-    public void TakeDamage(int attackerId, int damage)
+    public void TakeDamage(int damage)
     {
-        if (dead)
-            return;
-
-        curHp -= damage;
-        curAttackerId = attackerId;
-
-        // Flash the player red
-        photonView.RPC("DamageFlash", RpcTarget.Others);
-
-        // Update the health bar UI
-        // GameUI.instance.UpdateHealthBar();
-
-        // Die if no health left
-        if (curHp <= 0)
-            photonView.RPC("Die", RpcTarget.All);
-    }
-
-    [PunRPC]
-    void DamageFlash()
-    {
-        if (flashingDamage)
-            return;
-
-        StartCoroutine(DamageFlashCoroutine());
-
-        IEnumerator DamageFlashCoroutine()
+        currentHp -= damage;
+        if (currentHp <= 0)
         {
-            flashingDamage = true;
-            Color defaultColor = mr.material.color;
-            mr.material.color = Color.red;
-            yield return new WaitForSeconds(0.05f);
-            mr.material.color = defaultColor;
-            flashingDamage = false;
+            Die();
         }
+        GameUI.instance.UpdateHealth(currentHp);
     }
 
-    [PunRPC]
     void Die()
     {
-        curHp = 0;
-        dead = true;
-
-        GameManager.instance.alivePlayers--;
-
-        // Host will check win condition
-       // if (PhotonNetwork.IsMasterClient)
-          //  GameManager.instance.CaptureTile(int playerId);
-
-        // Is this our local player?
-        if (photonView.IsMine)
-        {
-            if (curAttackerId != 0)
-                GameManager.instance.GetPlayer(curAttackerId).photonView.RPC("AddKill", RpcTarget.All);
-
-            // Disable the physics and hide the player
-            rig.isKinematic = true;
-            transform.position = new Vector3(0, -50, 0);
-
-            // Respawn after a delay
-            StartCoroutine(RespawnCoroutine());
-        }
-    }
-
-    IEnumerator RespawnCoroutine()
-    {
-        yield return new WaitForSeconds(respawnTime);
-
-        photonView.RPC("Respawn", RpcTarget.All);
-    }
-
-    [PunRPC]
-    void Respawn()
-    {
-        dead = false;
-        curHp = maxHp;
-
-        // Reset player position to a random spawn point
-        Transform spawnPoint = GameManager.instance.spawnPoints[Random.Range(0, GameManager.instance.spawnPoints.Length)];
-        transform.position = spawnPoint.position;
-        rig.isKinematic = false;
-
-        // Reset the player in the game
-        GameManager.instance.alivePlayers++;
-    }
-
-    [PunRPC]
-    public void AddKill()
-    {
-        kills++;
-
-        // GameUI.instance.UpdatePlayerInfoText();
+        Debug.Log("Player died!");
+        // Add respawn or end game logic here
     }
 }

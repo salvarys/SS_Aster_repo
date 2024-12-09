@@ -1,35 +1,41 @@
 using UnityEngine;
 
-public class TileManager: MonoBehaviour
+public class TileManager : MonoBehaviour
 {
-    public Renderer tileRenderer;   
-    private Color currentColor; 
-    private GameController gameController; 
-
-    private Transform lastPlayerOnTile; 
+    public Renderer tileRenderer;      // Renderer for the tile
+    private Color currentColor;        // Current color of the tile
+    private GameController gameController; // Reference to the game controller
+    private Transform lastEntityOnTile; // Last entity (player or enemy) that captured the tile
 
     void Start()
     {
+        // Get the Renderer component
         tileRenderer = GetComponent<Renderer>();
 
+        // Find the GameController in the scene
         gameController = FindObjectOfType<GameController>();
 
+        // Initialize the current tile color
         currentColor = tileRenderer.material.color;
     }
 
     void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Player"))
+        // Check if the collider belongs to the Player or Enemy
+        if (other.CompareTag("Player") || other.CompareTag("Enemy"))
         {
-            Renderer playerRenderer = other.GetComponent<Renderer>();
-            if (playerRenderer != null && other.transform != lastPlayerOnTile)
+            Renderer entityRenderer = other.GetComponent<Renderer>();
+            if (entityRenderer != null && other.transform != lastEntityOnTile)
             {
-                tileRenderer.material.color = playerRenderer.material.color;
-                currentColor = playerRenderer.material.color;
+                // Change the tile's color to match the entity's color
+                tileRenderer.material.color = entityRenderer.material.color;
+                currentColor = entityRenderer.material.color;
 
+                // Notify the game controller that this tile was captured
                 gameController.TileCaptured(other.transform);
 
-                lastPlayerOnTile = other.transform;
+                // Update the last entity that captured this tile
+                lastEntityOnTile = other.transform;
             }
         }
     }
