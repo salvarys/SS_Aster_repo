@@ -1,8 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Photon.Pun;
-using Photon.Realtime;
 
 public class PlayerBehavior : MonoBehaviour
 {
@@ -12,40 +10,44 @@ public class PlayerBehavior : MonoBehaviour
     public float distanceToGround = 0.1f;
     public LayerMask groundLayer;
 
-    private bool bo;
+    private bool isJumping;
     private float vInput;
     private float hInput;
     private Rigidbody _rb;
     private CapsuleCollider _col;
 
+    // Health system
+    public int maxHp = 100;
+    private int currentHp;
+
     void Start()
     {
         _rb = GetComponent<Rigidbody>();
-
         _col = GetComponent<CapsuleCollider>();
+
+        currentHp = maxHp; // Initialize health
     }
 
     void Update()
     {
         vInput = Input.GetAxis("Vertical") * moveSpeed;
+        hInput = Input.GetAxis("Horizontal") * rotateSpeed;
 
-
-        hInput = Input.GetAxis("Horizontal")
-            * rotateSpeed;
         if (IsGrounded() && Input.GetKeyDown(KeyCode.Space))
         {
-            bo = true;
+            isJumping = true;
         }
+
+        // Handle interactions (e.g., capturing tiles) here if necessary
     }
 
     void FixedUpdate()
     {
-        if (bo)
+        if (isJumping)
         {
             _rb.AddForce(Vector3.up * jumpVelocity, ForceMode.Impulse);
-            bo = false;
+            isJumping = false;
         }
-
 
         Vector3 rotation = Vector3.up * hInput;
 
@@ -54,8 +56,8 @@ public class PlayerBehavior : MonoBehaviour
         _rb.MovePosition(this.transform.position + this.transform.forward * vInput * Time.fixedDeltaTime);
 
         _rb.MoveRotation(_rb.rotation * angleRot);
-
     }
+
     private bool IsGrounded()
     {
         Vector3 capsuleBottom = new Vector3(_col.bounds.center.x,
@@ -70,4 +72,34 @@ public class PlayerBehavior : MonoBehaviour
         return grounded;
     }
 
+    public void TakeDamage(int damage)
+    {
+        currentHp -= damage;
+        if (currentHp <= 0)
+        {
+            Die();
+        }
+        GameUI.instance.UpdateHealth(currentHp);
+    }
+
+    void Die()
+    {
+        Debug.Log("Player died!");
+
+        // Handle player death (e.g., disable controls, show respawn screen)
+        Respawn();
+    }
+
+    void Respawn()
+    {
+        // Respawn logic
+        currentHp = maxHp;
+        transform.position = GetRandomSpawnPoint(); // Get a random spawn point
+    }
+
+    Vector3 GetRandomSpawnPoint()
+    {
+        Transform[] spawnPoints = GameManager.instance.spawnPoints;
+        return spawnPoints[Random.Range(0, spawnPoints.Length)].position;
+    }
 }

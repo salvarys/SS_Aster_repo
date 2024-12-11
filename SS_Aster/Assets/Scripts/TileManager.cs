@@ -1,47 +1,45 @@
 using UnityEngine;
 
-public class TileManager : MonoBehaviour
+public class TileColorChange : MonoBehaviour
 {
-    private bool isCaptured = false;
-    private string capturedBy = "";
+    public Renderer tileRenderer;  // Renderer for the tile
+    private Color originalColor;   // Store the original color of the tile
 
-    private void OnTriggerEnter(Collider other)
+    void Start()
     {
-        if (isCaptured) return; // Prevent recapturing already captured tiles
-
-        // Check if the collider belongs to a player
-        PlayerController player = other.GetComponent<PlayerController>();
-        if (player != null)
+        // Get the Renderer component of the tile
+        if (tileRenderer == null)
         {
-            CaptureTile("Player");
-            GameManager.instance.OnTileCaptured("Player"); // Notify GameManager of capture
-            return;
+            tileRenderer = GetComponent<Renderer>();
         }
 
-        // Check if the collider belongs to an enemy
-        EnemyBehavior enemy = other.GetComponent<EnemyBehavior>();
-        if (enemy != null)
-        {
-            CaptureTile("Enemy");
-            GameManager.instance.OnTileCaptured("Enemy"); // Notify GameManager of capture
-            return;
-        }
-
-        // If the collider doesn't have the required component, log it and ignore
-        Debug.LogWarning($"Ignored collider: {other.name} (Tag: {other.tag})");
+        // Save the original color of the tile
+        originalColor = tileRenderer.material.color;
     }
 
-
-    private void CaptureTile(string capturer)
+    // This is called when something with a collider enters the tile's trigger
+    void OnTriggerEnter(Collider other)
     {
-        isCaptured = true;
-        capturedBy = capturer;
-        Debug.Log($"Tile captured by: {capturedBy}");
+        // Check if the object that entered is the player or the enemy (by tag)
+        if (other.CompareTag("Player") || other.CompareTag("Enemy"))
+        {
+            // Get the object's color (assuming the object has a Renderer component)
+            Renderer objectRenderer = other.GetComponent<Renderer>();
+            if (objectRenderer != null)
+            {
+                // Change the tile color to the object's color
+                tileRenderer.material.color = objectRenderer.material.color;
+            }
+        }
+    }
 
-        // Change the tile's appearance to indicate capture (e.g., change color)
-        GetComponent<Renderer>().material.color = (capturer == "Player") ? Color.green : Color.red;
-
-        // Notify the GameManager
-        GameManager.instance.OnTileCaptured(capturedBy);
+    // This is called when something with a collider exits the tile's trigger
+    void OnTriggerExit(Collider other)
+    {
+        // When the player or enemy leaves, change the tile color back to its original color
+        if (other.CompareTag("Player") || other.CompareTag("Enemy"))
+        {
+            tileRenderer.material.color = originalColor;
+        }
     }
 }

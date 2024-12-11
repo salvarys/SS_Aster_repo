@@ -148,16 +148,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0809e5c1f213eb4db5e384fcaba521c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  target: {fileID: 0}
   moveSpeed: 3
-  detectionRange: 5
-  attackRange: 1
-  maxHp: 50
-  damage: 10
-  respawnTime: 3
-  patrolPoints:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  rig: {fileID: 6171370608631577498}
-  meshRenderer: {fileID: 3938185310297938081}
-  player: {fileID: 0}
+  attackRange: 2
+  health: 50

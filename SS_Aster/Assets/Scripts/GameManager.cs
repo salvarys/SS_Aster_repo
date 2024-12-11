@@ -28,6 +28,12 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
+        if (playerPrefab == null || enemyPrefab == null)
+        {
+            Debug.LogError("Player or Enemy prefab is not assigned in the GameManager script.");
+            return;
+        }
+
         // Spawn the player at a random spawn point
         Transform playerSpawnPoint = spawnPoints[Random.Range(0, spawnPoints.Length)];
         player = Instantiate(playerPrefab, playerSpawnPoint.position, Quaternion.identity);
@@ -48,6 +54,7 @@ public class GameManager : MonoBehaviour
             enemies.Add(enemy);
         }
     }
+
 
     public void OnTileCaptured(string capturer)
     {
