@@ -12,10 +12,19 @@ public class PlayerController : MonoBehaviour
 
     public int currentHp { get; private set; }
 
+    private Rigidbody rb;
+
     void Start()
     {
         // Initialize health
         currentHp = maxHp;
+
+        // Cache Rigidbody component
+        rb = GetComponent<Rigidbody>();
+        if (rb == null)
+        {
+            Debug.LogError("PlayerController: Rigidbody not found on the player!");
+        }
     }
 
     void Update()
@@ -31,31 +40,67 @@ public class PlayerController : MonoBehaviour
         float x = Input.GetAxis("Horizontal");
         float z = Input.GetAxis("Vertical");
 
-        Vector3 moveDir = new Vector3(x, 0, z) * moveSpeed * Time.deltaTime;
+        // Calculate movement direction and apply translation
+        Vector3 moveDir = new Vector3(x, 0, z).normalized * moveSpeed * Time.deltaTime;
         transform.Translate(moveDir, Space.World);
+
+        // Optional: Rotate the player to face the movement direction
+        if (moveDir.magnitude > 0)
+        {
+            transform.forward = moveDir;
+        }
     }
 
     void Jump()
     {
+        // Check if the player is grounded
         if (Physics.Raycast(transform.position, Vector3.down, 1.1f))
         {
-            GetComponent<Rigidbody>().AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
+            if (rb != null)
+            {
+                rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
+            }
         }
     }
 
     public void TakeDamage(int damage)
     {
         currentHp -= damage;
+
+        // Update health in the UI
+        GameUI.instance?.UpdateHealth(currentHp);
+
         if (currentHp <= 0)
         {
             Die();
         }
-        GameUI.instance.UpdateHealth(currentHp);
     }
 
     void Die()
     {
         Debug.Log("Player died!");
-        // Add respawn or end game logic here
+
+    }
+
+    public void AddKill()
+    {
+        kills++;
+        GameUI.instance?.UpdateKills(kills);
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        // Handle interactions with enemies or tiles
+        if (collision.gameObject.CompareTag("Enemy"))
+        {
+            Debug.Log("Player collided with an enemy!");
+            TakeDamage(10); // Example damage value
+        }
+
+        if (collision.gameObject.CompareTag("Tile"))
+        {
+            Debug.Log("Player stepped on a tile!");
+            // Handle tile interaction logic (e.g., claiming the tile)
+        }
     }
 }

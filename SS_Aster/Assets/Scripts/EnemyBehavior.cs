@@ -1,150 +1,84 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class EnemyBehavior : MonoBehaviour
 {
-    [Header("Stats")]
+    public Transform target; // Reference to the player's Transform
     public float moveSpeed = 3f;
-    public float detectionRange = 5f;
     public float attackRange = 2f;
-    public int maxHp = 50;
-    public int damage = 10;
-    public float respawnTime = 3f;
-    private Vector3 moveDirection;  
-    public float directionChangeInterval = 2f; 
+    public int health = 50;
 
-    [Header("Movement")]
-    public Transform[] patrolPoints; // Points for patrolling
-    private int currentPatrolIndex = 0;
-
-    [Header("Components")]
-    public Rigidbody rig;
-    public MeshRenderer meshRenderer;
-    public PlayerController player;
-
-    private int currentHp;
-    private bool isDead = false;
-    private bool isCapturing = false;
+    private GameManager gameManager;
 
     void Start()
     {
-        currentHp = maxHp;
-        player = FindObjectOfType<PlayerController>();
+        // Attempt to find the player if not assigned
+        if (target == null)
+        {
+            PlayerController player = FindObjectOfType<PlayerController>();
+            if (player != null)
+            {
+                target = player.transform;
+            }
+            else
+            {
+                Debug.LogError("EnemyBehavior: Player target not found in the scene.");
+            }
+        }
 
+        gameManager = FindObjectOfType<GameManager>();
+        if (gameManager == null)
+        {
+            Debug.LogError("EnemyBehavior: GameManager not found in the scene.");
+        }
     }
 
     void Update()
     {
-        if (isDead) return;
+        if (target == null) return;
 
-        float v = Vector3.Distance(transform.position, player.transform.position);
-        float distanceToPlayer = v;
-
-        if (distanceToPlayer <= attackRange)
+        // Move towards the player
+        float distanceToPlayer = Vector3.Distance(transform.position, target.position);
+        if (distanceToPlayer > attackRange)
         {
-            AttackPlayer();
-        }
-        else if (distanceToPlayer <= detectionRange)
-        {
-            ChasePlayer();
+            MoveTowardsTarget();
         }
         else
         {
-            Patrol();
+            AttackPlayer();
         }
-    }
 
-    // Patrol behavior
-    void Patrol()
-    {
-        if (patrolPoints.Length == 0) return;
-
-        Transform targetPoint = patrolPoints[currentPatrolIndex];
-        Vector3 direction = (targetPoint.position - transform.position).normalized;
-
-        rig.velocity = new Vector3(direction.x * moveSpeed, rig.velocity.y, direction.z * moveSpeed);
-
-        // Check if reached patrol point
-        if (Vector3.Distance(transform.position, targetPoint.position) < 1f)
-        {
-            currentPatrolIndex = (currentPatrolIndex + 1) % patrolPoints.Length;
-        }
-    }
-
-    // Chase the player
-    void ChasePlayer()
-    {
-        Vector3 direction = (player.transform.position - transform.position).normalized;
-        rig.velocity = new Vector3(direction.x * moveSpeed, rig.velocity.y, direction.z * moveSpeed);
-    }
-
-    // Attack the player
-    void AttackPlayer()
-    {
-        player.TakeDamage(damage);
-        Debug.Log("Enemy attacked player!");
-    }
-
-    // Capture tile logic
-    private void OnTriggerEnter(Collider other)
-    {
-        if (other.CompareTag("Tile"))
-        {
-            if (!isCapturing)
-            {
-                StartCoroutine(CaptureTile(other.gameObject));
-            }
-        }
-    }
-
-    IEnumerator CaptureTile(GameObject tile)
-    {
-        isCapturing = true;
-
-        // Simulate capturing time
-        yield return new WaitForSeconds(2f);
-
-        Debug.Log("Enemy captured a tile!");
-        Destroy(tile); // Simulates capturing a tile
-        isCapturing = false;
-    }
-
-    // Take damage from the player
-    public void TakeDamage(int damage)
-    {
-        currentHp -= damage;
-
-        if (currentHp <= 0)
+        // Check for death
+        if (health <= 0)
         {
             Die();
         }
     }
 
-    void Die()
+    void MoveTowardsTarget()
     {
-        isDead = true;
-        Debug.Log("Enemy died!");
-        rig.isKinematic = true;
-        meshRenderer.enabled = false;
-
-        // Start respawn coroutine
-        StartCoroutine(Respawn());
+        Vector3 direction = (target.position - transform.position).normalized;
+        transform.position += direction * moveSpeed * Time.deltaTime;
     }
 
-    IEnumerator Respawn()
+    void AttackPlayer()
     {
-        yield return new WaitForSeconds(respawnTime);
+        Debug.Log("Enemy is attacking the player!");
+        // Add attack logic here (e.g., reduce player's health)
+    }
 
-        // Respawn logic
-        Transform respawnPoint = patrolPoints[Random.Range(0, patrolPoints.Length)];
-        transform.position = respawnPoint.position;
+    void Die()
+    {
+        Debug.Log("Enemy has died.");
+        gameObject.SetActive(false); // Disable the enemy
+        // Optionally respawn logic or destroy the object
+    }
 
-        currentHp = maxHp;
-        isDead = false;
-        rig.isKinematic = false;
-        meshRenderer.enabled = true;
-
-        Debug.Log("Enemy respawned!");
+    public void TakeDamage(int damage)
+    {
+        health -= damage;
+        if (health <= 0)
+        {
+            Die();
+        }
     }
 }

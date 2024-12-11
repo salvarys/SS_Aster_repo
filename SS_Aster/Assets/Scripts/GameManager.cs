@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -12,12 +11,15 @@ public class GameManager : MonoBehaviour
     private PlayerController player;
     private List<EnemyBehavior> enemies = new List<EnemyBehavior>();
 
-
-    private const int tilesToWin = 7;
-
     public static GameManager instance;
 
-    private Dictionary<int, int> playerTileCounts = new Dictionary<int, int>();  // Tracks player ID -> owned tiles count
+    private Dictionary<string, int> tileCounts = new Dictionary<string, int>
+    {
+        { "Player", 0 },
+        { "Enemy", 0 }
+    };
+
+    private const int tilesToWin = 7;
 
     void Awake()
     {
@@ -44,6 +46,26 @@ public class GameManager : MonoBehaviour
             Transform enemySpawnPoint = spawnPoints[Random.Range(0, spawnPoints.Length)];
             EnemyBehavior enemy = Instantiate(enemyPrefab, enemySpawnPoint.position, Quaternion.identity);
             enemies.Add(enemy);
+        }
+    }
+
+    public void OnTileCaptured(string capturer)
+    {
+        if (!tileCounts.ContainsKey(capturer))
+        {
+            Debug.LogError($"Unknown capturer: {capturer}");
+            return;
+        }
+
+        // Increment tile count for the capturer
+        tileCounts[capturer]++;
+        Debug.Log($"{capturer} captured a tile. Total tiles: {tileCounts[capturer]}");
+
+        // Check win condition
+        if (tileCounts[capturer] >= tilesToWin)
+        {
+            Debug.Log($"{capturer} wins the game!");
+            // Implement win logic here (e.g., restart game or show victory screen)
         }
     }
 }

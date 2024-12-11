@@ -2,41 +2,46 @@ using UnityEngine;
 
 public class TileManager : MonoBehaviour
 {
-    public Renderer tileRenderer;      // Renderer for the tile
-    private Color currentColor;        // Current color of the tile
-    private GameController gameController; // Reference to the game controller
-    private Transform lastEntityOnTile; // Last entity (player or enemy) that captured the tile
+    private bool isCaptured = false;
+    private string capturedBy = "";
 
-    void Start()
+    private void OnTriggerEnter(Collider other)
     {
-        // Get the Renderer component
-        tileRenderer = GetComponent<Renderer>();
+        if (isCaptured) return; // Prevent recapturing already captured tiles
 
-        // Find the GameController in the scene
-        gameController = FindObjectOfType<GameController>();
+        // Check if the collider belongs to a player
+        PlayerController player = other.GetComponent<PlayerController>();
+        if (player != null)
+        {
+            CaptureTile("Player");
+            GameManager.instance.OnTileCaptured("Player"); // Notify GameManager of capture
+            return;
+        }
 
-        // Initialize the current tile color
-        currentColor = tileRenderer.material.color;
+        // Check if the collider belongs to an enemy
+        EnemyBehavior enemy = other.GetComponent<EnemyBehavior>();
+        if (enemy != null)
+        {
+            CaptureTile("Enemy");
+            GameManager.instance.OnTileCaptured("Enemy"); // Notify GameManager of capture
+            return;
+        }
+
+        // If the collider doesn't have the required component, log it and ignore
+        Debug.LogWarning($"Ignored collider: {other.name} (Tag: {other.tag})");
     }
 
-    void OnTriggerEnter(Collider other)
+
+    private void CaptureTile(string capturer)
     {
-        // Check if the collider belongs to the Player or Enemy
-        if (other.CompareTag("Player") || other.CompareTag("Enemy"))
-        {
-            Renderer entityRenderer = other.GetComponent<Renderer>();
-            if (entityRenderer != null && other.transform != lastEntityOnTile)
-            {
-                // Change the tile's color to match the entity's color
-                tileRenderer.material.color = entityRenderer.material.color;
-                currentColor = entityRenderer.material.color;
+        isCaptured = true;
+        capturedBy = capturer;
+        Debug.Log($"Tile captured by: {capturedBy}");
 
-                // Notify the game controller that this tile was captured
-                gameController.TileCaptured(other.transform);
+        // Change the tile's appearance to indicate capture (e.g., change color)
+        GetComponent<Renderer>().material.color = (capturer == "Player") ? Color.green : Color.red;
 
-                // Update the last entity that captured this tile
-                lastEntityOnTile = other.transform;
-            }
-        }
+        // Notify the GameManager
+        GameManager.instance.OnTileCaptured(capturedBy);
     }
 }
